@@ -1,7 +1,10 @@
 #!flask/bin/python
-from flask import Flask, jsonify
-import os.path, time
 import json
+import os.path
+import time
+import ffmpeg_helpers
+
+from flask import Flask
 
 app = Flask(__name__)
 
@@ -21,14 +24,14 @@ class FileInfoEncoder(json.JSONEncoder):
 
 
 def get_all_files_info():
-    fileInfos = []
+    file_infos = []
     directory = os.getcwd() + "/data"
     for file in os.listdir(directory):
-        fileInfo = FileInfo(file, time.ctime(os.path.getmtime(directory + "/" + file)),
-                            time.ctime(os.path.getctime(directory + "/" + file)))
-        fileInfos.append(fileInfo)
+        file_info = FileInfo(file, time.ctime(os.path.getmtime(directory + "/" + file)),
+                             time.ctime(os.path.getctime(directory + "/" + file)))
+        file_infos.append(file_info)
 
-    return json.dumps(fileInfos, cls=FileInfoEncoder)
+    return json.dumps(file_infos, cls=FileInfoEncoder)
 
 
 def creation_date(file):
@@ -69,6 +72,33 @@ def get_creation_date(filename):
 @app.route('/holome/api/v1.0/getallinfo', methods=['GET'])
 def get_all_info():
     return get_all_files_info()
+
+
+@app.route('/holome/api/v1.0/getallinfo', methods=['GET'])
+def get_all_info():
+    return get_all_files_info()
+
+
+@app.route('/holome/api/v1.0/makepreviewimage/<string:infilename>/<string:outfilename>/<string:time>/<string:width>',
+           methods=['GET'])
+def get_make_preview_image(infilename, outfilename, time, width):
+    ffmpeg_helpers.make_preview_image(infilename, outfilename, time, width)
+
+
+@app.route(
+    '/holome/api/v1.0/makepreviewimagecroplefthalf/<string:infilename>/<string:outfilename>/<string:time>/<string:width>',
+    methods=['GET'])
+def get_make_preview_image_crop_left_half(infilename, outfilename, time, width):
+    ffmpeg_helpers.make_preview_image_crop_left_half(infilename, outfilename, time, width)
+
+
+@app.route(
+    '/holome/api/v1.0/makepreviewimagechromakeyimage/<string:infilename>/<string:outfilename>/<string:time>/<string:width>',
+    methods=['GET'])
+def get_make_preview_image_chromakey_image(invideofilename, inbackgroundfilename, time, color, outfilename,
+                                           overrideoutputfile):
+    ffmpeg_helpers.make_preview_image_chromakey_image(invideofilename, inbackgroundfilename, time, color, outfilename,
+                                                      overrideoutputfile)
 
 
 if __name__ == '__main__':
